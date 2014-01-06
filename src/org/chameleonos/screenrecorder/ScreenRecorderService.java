@@ -87,6 +87,11 @@ public class ScreenRecorderService extends IntentService
             sActionSound.play(MediaActionSound.STOP_VIDEO_RECORDING);
             sScreenRecorder.stop();
             postProcessingNotification();
+            int showState = ScreenRecorderService.getShowTouchesState();
+            if (showState != 0) {
+                Settings.System.putInt(getContentResolver(),
+                        Settings.System.SHOW_TOUCHES, showState == 1 ? 0 : 1);
+            }
         }
     }
 
@@ -326,7 +331,18 @@ public class ScreenRecorderService extends IntentService
             Settings.System.putInt(getContentResolver(),
                     Settings.System.SHOW_TOUCHES, showTouches ? 0 : 1);
             // call postRecordingNotification so the icon gets updated based on this change
+            ScreenRecorderService.setShowTouchesState(!showTouches ? 1 : 2);
             postRecordingNotification();
         }
+    }
+
+    private static int showTouchesState = 0;
+
+    public static int getShowTouchesState() {
+        return showTouchesState;
+    }
+
+    public static void setShowTouchesState(int showTouchesState) {
+        ScreenRecorderService.showTouchesState = showTouchesState;
     }
 }
