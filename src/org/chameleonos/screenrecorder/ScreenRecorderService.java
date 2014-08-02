@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.media.MediaActionSound;
 import android.media.MediaMetadataRetriever;
@@ -32,6 +33,7 @@ import android.media.screenrecorder.ScreenRecorder;
 import android.media.screenrecorder.ScreenRecorder.ScreenRecorderCallbacks;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -42,6 +44,8 @@ import android.view.WindowManager;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import dalvik.system.VMRuntime;
 
 public class ScreenRecorderService extends IntentService
         implements ScreenRecorderCallbacks {
@@ -254,16 +258,32 @@ public class ScreenRecorderService extends IntentService
                                 PendingIntent.FLAG_CANCEL_CURRENT));
 
         // try and grab a frame as a preview
-        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(RECORDER_PATH + File.separator + sCurrentFileName);
-        Bitmap thumbnail = mmr.getFrameAtTime();
-        if (thumbnail != null) {
-            Notification.BigPictureStyle style =
-                    new Notification.BigPictureStyle()
-                            .bigPicture(thumbnail)
-                    .setSummaryText(getString(R.string.notification_recording_finished_text,
-                            sCurrentFileName));
-            b.setStyle(style);
+        String runtime = SystemProperties.get("persist.sys.dalvik.vm.lib", VMRuntime.getRuntime().vmLibrary());
+        if (!runtime.equals("libart.so")) {
+            Bitmap thumbnail = null;
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            try {
+                mmr.setDataSource(RECORDER_PATH + File.separator + sCurrentFileName);
+                thumbnail = mmr.getFrameAtTime();
+            } catch (IllegalArgumentException ex) {
+                // Assume this is a corrupt video file
+            } catch (RuntimeException ex) {
+                // Assume this is a corrupt video file.
+            } finally {
+                try {
+                    mmr.release();
+                } catch (RuntimeException ex) {
+                    // Ignore failures while cleaning up.
+                }
+            }
+            if (thumbnail != null) {
+                Notification.BigPictureStyle style =
+                        new Notification.BigPictureStyle()
+                                .bigPicture(thumbnail)
+                        .setSummaryText(getString(R.string.notification_recording_finished_text,
+                                sCurrentFileName));
+                b.setStyle(style);
+            }
         }
 
         nm.notify(NOTIFICATION_ID, b.build());
