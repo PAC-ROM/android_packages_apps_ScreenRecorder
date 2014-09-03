@@ -46,13 +46,13 @@ import java.util.Date;
 public class ScreenRecorderService extends IntentService
         implements ScreenRecorderCallbacks {
     public static final String ACTION_NOTIFY_RECORD_SERVICE
-            = "org.chameleonos.action.NOTIFY_RECORD_SERVICE";
+            = "com.pac.action.NOTIFY_RECORD_SERVICE";
     public static final String ACTION_NOTIFY_DELETE_SCREENRECORD
-            = "org.chameleonos.action.NOTIFY_DELETE_SCREENRECORD";
+            = "com.pac.action.NOTIFY_DELETE_SCREENRECORD";
     public static final String ACTION_NOTIFY_TOGGLE_SHOW_TOUCHES
-            = "org.chameleonos.action.NOTIFY_TOGGLE_SHOW_TOUCHES";
+            = "com.pac.action.NOTIFY_TOGGLE_SHOW_TOUCHES";
     public static final String SCREENRECORD_PATH
-            = "org.chameleonos.screenrecorder.SCREENRECORD_PATH";
+            = "com.pac.screenrecorder.SCREENRECORD_PATH";
 
     private static final String TAG = "ScreenRecorderService";
     private static final String RECORDER_FOLDER = "ScreenRecorder";
@@ -112,11 +112,11 @@ public class ScreenRecorderService extends IntentService
         final Resources res = getResources();
 
         final int[] dimensions = getVideoDimensions(res, display);
-        final int bitRate = Settings.System.getInt(resolver,
-                Settings.System.SCREEN_RECORDER_BITRATE,
+        final int bitRate = Settings.PAC.getInt(resolver,
+                Settings.PAC.SCREEN_RECORDER_BITRATE,
                 res.getInteger(R.integer.config_screenRecorderFramerate));
-        final boolean recordAudio = Settings.System.getInt(resolver,
-                Settings.System.SCREEN_RECORDER_RECORD_AUDIO, 0) == 1;
+        final boolean recordAudio = Settings.PAC.getInt(resolver,
+                Settings.PAC.SCREEN_RECORDER_RECORD_AUDIO, 0) == 1;
 
         sScreenRecorder.init(rotation, dimensions[0], dimensions[1], bitRate, 0, recordAudio);
         File f = new File(RECORDER_PATH);
@@ -143,8 +143,8 @@ public class ScreenRecorderService extends IntentService
     /* Screen recorder callbacks */
     @Override
     public void onRecordingStarted() {
-        final boolean recordAudio = Settings.System.getInt(getContentResolver(),
-                Settings.System.SCREEN_RECORDER_RECORD_AUDIO, 0) == 1;
+        final boolean recordAudio = Settings.PAC.getInt(getContentResolver(),
+                Settings.PAC.SCREEN_RECORDER_RECORD_AUDIO, 0) == 1;
         // only play the start recording sound when only video is being recorded
         // otherwise the sound will be picked up by the mic and included which
         // isn't really desirable.
@@ -279,8 +279,8 @@ public class ScreenRecorderService extends IntentService
     }
 
     private int[] getVideoDimensions(Resources res, Display display) {
-        String dimensionString = Settings.System.getString(getContentResolver(),
-                Settings.System.SCREEN_RECORDER_OUTPUT_DIMENSIONS);
+        String dimensionString = Settings.PAC.getString(getContentResolver(),
+                Settings.PAC.SCREEN_RECORDER_OUTPUT_DIMENSIONS);
         if (TextUtils.isEmpty(dimensionString)) {
             dimensionString = res.getString(R.string.config_screenRecorderOutputDimensions);
         }
